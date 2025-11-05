@@ -1,0 +1,41 @@
+---
+title: "TBI_FRUITFLIES"
+output: html_notebook
+---
+
+```{r}
+
+# Raw data
+sham_data <- c(1.01055313, 1.14126258, 1.08617385, 0.895919017, 0.837600921, 1.06482763, 0.921312581)
+tbi_data <- c(0.59939168, 0.42988126, 0.7080301, 0.53824977)
+
+# Dataset summaries
+groups <- c("Sham (n=7)", "TBI (n=4)")
+means <- c(mean(sham_data), mean(tbi_data))  # Calculated means
+stds <- c(sd(sham_data), sd(tbi_data))       # Calculated standard deviations
+n_samples <- c(length(sham_data), length(tbi_data))  # Sample sizes
+standard_errors <- stds / sqrt(n_samples)    # Standard errors
+
+# Create the bar chart
+x <- barplot(means, beside = TRUE, ylim = c(0, 1.2), 
+             col = c("#1f77b4", "#ff7f0e"),  # Blue and orange
+             border = "black", lwd = 1.5, 
+             names.arg = groups, 
+             main = "Negative geotaxis: Sham vs TBI ",
+             xlab = "TBI status", ylab = "Fold change from pretest (mean ± SD)",
+             cex.names = 1.2, cex.axis = 1, cex.lab = 1.2)
+
+# Add error bars
+segments(x, means - standard_errors, x, means + standard_errors, lwd = 1.5)
+arrows(x, means - standard_errors, x, means + standard_errors, 
+       lwd = 0.5, angle = 90, code = 3, length = 0.05)
+
+# Add value labels on top of bars
+text(x, means + 0.02, labels = sprintf("%.3f", means), pos = 3, cex = 1)
+
+# Customize grid and background
+grid(nx = NA, ny = NULL, lty = "dashed", col = "gray")
+par(bg = "#f5f5f5")
+t.test(n_samples)
+```
+

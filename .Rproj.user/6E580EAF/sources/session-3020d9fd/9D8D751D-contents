@@ -1,0 +1,96 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+ 
+
+```{r setup}
+library(tidyverse)
+library(ggplot2)
+library(scales)
+library(dplyr)
+library(readr)     
+library(dplyr)
+```
+
+```{r data}
+Springfield_data <-"D:/R/Waffle/Springfield_data_10_24.csv"
+file.exists(Springfield_data)
+
+data <- readr::read_csv(Springfield_data)
+dim(data)
+dplyr::glimpse(data)
+```
+
+```{r}
+data2 <- data %>%
+  dplyr::select("scientificName", "Native Status", "C-value", "year")
+summary(data2)
+
+
+```
+
+
+Data
+```{r}
+
+# Before (1840–1880): Native=25, Non-native=9 -> total 34
+# After (1960–2000): Native=65, Non-native=38 -> total 103
+df <- tribble( ~period, ~status, ~n, 
+               "Before (1840–1880)", "Native", 25, 
+               "Before (1840–1880)", "Non-native", 9, 
+               "After (1960–2000)", "Native", 65, 
+               "After (1960–2000)", "Non-native", 38 ) |> mutate( period = factor(period, levels = c("Before (1840–1880)", "After (1960–2000)")), 
+           status = factor(status, levels = c("Native", "Non-native")) 
+           ) 
+
+df_prop <- df |> group_by(period) |> mutate(prop = n / sum(n)) |> ungroup() 
+pal <- c( "Native" = "darkseagreen3", "Non-native" = "steelblue1" ) 
+
+theme_tesis<-theme_minimal(base_size = 13) + 
+  theme( plot.title = element_text(face = "bold", margin = margin(b = 6)), 
+         plot.subtitle = element_text(color = "#555555", margin = margin(b = 10)), 
+         plot.caption = element_text(size = 10, color = "#6B6B6B"), 
+         axis.title.y = element_text(margin = margin(r = 8)), 
+         axis.text.x = element_text(face = "bold"), 
+         panel.grid.minor= element_blank(), 
+         panel.grid.major.x = element_blank(), legend.position = "top", legend.title = element_blank(), legend.text = element_text(size = 12), 
+         plot.background = element_rect(fill = "#F9F7F2", color = NA))
+                                      
+```
+
+Graficas
+```{r}
+
+p_stack_counts <- ggplot(df, aes(x = period, y = n, fill = status)) +
+  geom_col() +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3) +
+  labs(
+    title = "Native vs Non-native before and after the urbanization",
+    subtitle = "PRE urbanization vs POST urbanization",
+    x = NULL, y = "count", fill = NULL
+  ) +
+  scale_fill_manual( values = pal)
+  theme_minimal(base_size = 12)
+  
+  
+#### 2 graph proportion
+p_stack_prop <- ggplot(df_prop, aes(x = period, y = prop, fill = status)) +
+  geom_col(position = "fill") +
+  geom_text(aes(label = percent(prop, accuracy = 1)),
+            position = position_stack(vjust = 0.5), size = 3, color = "black") +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  labs(
+    title = "Native vs Non-native before and after the urbanization",
+    x = NULL, y = "Proportion", fill = NULL
+  ) +
+  scale_fill_manual( values = pal)
+  theme_minimal(base_size = 12)
+  
+  
+p_stack_counts
+p_stack_prop
+
+
+```
+

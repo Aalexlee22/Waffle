@@ -1,0 +1,159 @@
+---
+title: "Springfield research"
+output: html_notebook
+---
+
+
+
+
+
+## **Introduction** ##
+
+The rapid expansion of human settlements and the resulting urbanization are major drivers of environmental change globally (De Barros Ruas et al., 2022). As natural landscapes are converted into urban infrastructures, local ecosystems face significant disruption, leading to changes in soil composition, hydrology, and temperature (Gioria & Osborne, 2014). These disturbances often create favorable conditions for plant species that are highly adaptable and competitive, known as invasive flora, while simultaneously stressing native or established plant communities (Trentanovi et al., 2013). Understanding the direct ecological consequences of this historical shift is crucial for conservation and urban planning efforts. 
+
+  
+
+While research has highlighted the broad ecological consequences of urbanization, there remains a need to investigate specific regional effects; specifically, this study focuses on documenting the impact of major urbanization in Springfield, Massachusetts, that occurred between the mid-19th and late-20th centuries on the local plant communities. While it is theorized that urbanization promotes invasive species and diminishes native populations, a direct, comparative analysis using historical datasets across this critical period provides essential evidence. 
+
+ 
+
+The objective of this investigation is to statistically compare the diversity and population size of invasive and native/established flora species across two distinct historical periods: 1840-1880 (pre-major urbanization) and 1960-2000 (post-major urbanization). By analyzing archived data from the Consortium of Northeastern Herbaria, we aim to quantify the shifts in plant populations. We hypothesize that the increase in invasive species will be statistically significant and will coincide with a corresponding statistically significant decline in native flora, suggesting a causal relationship driven by urban development. 
+
+ 
+### Methods:
+
+ 
+
+The Northeast Herbaria Consortium database was accessed after creating an account on the website and using the text search on the Search tab. The CSV file from the database was downloaded for all Springfield plants. The data were then cleaned, separating them into two periods: before (1840–1880) and after (1960–2000) urbanization in the city of Springfield, Massachusetts. Due to the limited pre-urbanization information, the date range was adjusted to 1840–1892, resulting in 76 specimens compared to 70. This resulted in a sample similar to the post-urbanization sample and, therefore, yielded more promising results for our research. A new column was subsequently created to separate the information between the pre- and post-urbanization periods. 
+
+ 
+
+The database provided by Faber-Langendoen, D. 2018. Northeast Regional Floristic Quality Assessment Tools for Wetland Assessments. NatureServe, Arlington, VA. Contributing Authors: Don Cameron, Arthur V. Gilman, Kenneth J. Metzler, Richard M. Ring, Michele Bottiaux, Kristin Snow, Lesley Sneddon were then used. This was done to obtain coefficients of conservatism, or C values, based on their response to stressors. Species with high C values (7-10) are mostly confined to areas with minimal anthropogenic disturbance or adapted to unique natural conditions (including natural disturbances), while species with low C values (1-3) are mostly found in ruderal or highly degraded habitats. Exotic species are typically assigned a value of 0. 
+
+ 
+
+For specimens whose data could not be obtained from the spreadsheet, the USDA Natural Resources Conservation Service PLANTS database was used to obtain updated species names and, therefore, the C value. Data for which no information was found were retained for inclusion in the analysis. Additionally, duplicate data were removed from the database based on information and photographs for each species. A new column was created to differentiate between native and non-native plants in our database, again using the USDA PLANTS Database website. A color-coded map is used to differentiate between native and non-native plants, with blue representing non-native plants and green representing native plants. 
+Info
+
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(scales)
+```
+
+```{r}
+info <- data.frame(
+  period = c("Before (1840–1880)", "Before (1840–1880)",
+             "After (1960–2000)",  "After (1960–2000)"),
+  status = c("Native", "Non-native", "Native", "Non-native"),
+  n      = c(25, 9, 65, 38)
+)
+
+info$period <- factor(info$period, levels = c("Before (1840–1880)", "After (1960–2000)"))
+info$status <- factor(info$status, levels = c("Native", "Non-native"))
+
+info_prop <- info %>%
+  group_by(period) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup()
+```
+
+
+### Graphs
+```{r}
+pal <- c("Native"="darkseagreen3","Non-native"="steelblue1")
+
+base_theme <- theme_minimal(base_size = 12) +
+  theme(
+    plot.title    = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, color = "#555"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank()
+  )
+```
+
+```{r}
+graph1 <- ggplot(info_prop, aes(x = period, y = prop, fill = status)) +
+  geom_col(position = "fill", width = 0.75, color = "white") +
+  geom_text(aes(label = percent(prop, accuracy = 1)),
+            position = position_stack(vjust = 0.5), size = 3.5) +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  scale_fill_manual(values = pal) +
+  labs(title = "Native vs Non-native before and after urbanization",
+       subtitle = "Before (1840–1880) vs After (1960–2000)",
+       x = NULL, y = "Proportion") +
+  base_theme
+
+graph1
+```
+```{r}
+graph2 <- ggplot(info, aes(x = period, y = n, fill = status)) +
+  geom_col(width = 0.75, color = "white") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
+  scale_fill_manual(values = pal) +
+  labs(title = "Native vs Non-native before and after urbanization",
+       subtitle = "Before (1840–1880) vs After (1960–2000)",
+       x = NULL, y = "Count") +
+  base_theme
+
+graph2
+```
+
+#### CHI SQUARE TEST OF NATIVE VS NON NATIVE PLANTS
+
+```{r}
+tab <- matrix(c(25, 9,
+                65, 38),
+              nrow = 2, byrow = TRUE,
+              dimnames = list(Period = c("Before","After"),
+                              Status = c("Native","Non-native")))
+chisq.test(tab)
+
+```
+
+```{r}
+
+C_value <- 0:10
+
+before_c <- c(9, 0, 1, 2, 0, 3, 2, 7, 4, 6, 0) #34 total
+after_c  <- c(37,0,10, 1,11, 6,11,12,7, 6, 2) #103 total
+
+c_data <- data.frame(
+  C_value = rep(C_value, 2),
+  period  = rep(c("Before","After"), each = length(C_value)),
+  n       = c(before_c, after_c)
+)
+
+
+pal <- c("Before" = "tomato1", "After" = "gold3")
+
+base_theme <- theme_minimal(base_size = 12) +
+  theme(
+    plot.title    = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, color = "#555"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank()
+)
+
+graph3 <- ggplot(c_data, aes(x = factor(C_value), y = n, fill = period)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7, color = "white") +
+  scale_fill_manual(values = pal) +
+  labs(title = "C value distribution by period", x = "C value", y = "Count") +
+  theme_minimal(base_size = 12) + base_theme
+
+
+graph3
+```
+
+#### T TEST OF C VALUES BEFORE AND AFTER URBANIZATION IN SPRINGFIELD
+
+```{r}
+c_before <- rep(C_value, times = before_c)
+c_after  <- rep(C_value, times = after_c)
+t.test(c_before, c_after)
+
+```
+
+

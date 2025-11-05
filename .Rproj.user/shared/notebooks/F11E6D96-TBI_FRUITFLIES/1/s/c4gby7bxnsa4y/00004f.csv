@@ -1,0 +1,3 @@
+"0",""
+"0","# Add error bars"
+"0","segments(x, means - standard_errors, x, means + standard_errors, lwd = 1.5)"

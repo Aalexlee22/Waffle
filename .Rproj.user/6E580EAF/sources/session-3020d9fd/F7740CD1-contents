@@ -1,0 +1,31 @@
+
+def main():
+  name = input("Como te llamas?\n").strip().title().capitalize()   
+  if (name ==""):
+    hello()
+  else:
+    hello(name)
+  
+  suma()
+  x = float(input("Cuanto es X? \n"))
+  y = float(input("Cuanto es Y? \n"))
+  
+  z= resta(x,y)
+  print(f"{z:.2f} es el resultado de restar {x} entre {y}")
+  
+  
+  def hello (who="World"):
+    print(f"Hello, {who}!")
+  
+  def suma ():
+    x = float(input("Cuanto es X? \n"))
+  y = float(input("Cuanto es Y? \n"))
+  
+  z= x+y
+  print(f"{z:.2f} es el resultado de sumar {x} entre {y}")
+  
+  def resta (x,y):
+    return x - y
+  
+  main()
+  
